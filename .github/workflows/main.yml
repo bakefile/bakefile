@@ -1,0 +1,48 @@
+name: Continuous Integration
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  ubuntu_cargo_test:
+    name: (Ubuntu) Cargo Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build release
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+  macos_cargo_test:
+    name: (MacOS) Cargo Test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build release
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+  ubuntu_cargo_build:
+    name: (Ubuntu) Cargo Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build release
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: Bakefile
+
+  macos_cargo_build:
+    name: (MacOS) Cargo Release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build release
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: Bakefile

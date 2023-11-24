@@ -1,0 +1,8 @@
+$ Simple Example
+$ 1 target, 2 shell-commands
+$   * 1 single argument
+$   * 1 stdout redirection
+₽
+all:
+    echo "hello world"
+    echo "hallö welt" > /dev/random

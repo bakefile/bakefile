@@ -1,0 +1,7 @@
+hw: en de
+
+en:
+    echo "hello world"
+
+de:
+    echo "hallö welt"
