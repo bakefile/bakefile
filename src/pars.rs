@@ -140,4 +140,16 @@ foo:
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
     }
 
+    #[test]
+    fn test_target_and_2_commands() {
+        let input = "foo:
+    bar
+    baz
+";
+        let recipe = parse_recipe(&input);
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
+    }
+
+
 }

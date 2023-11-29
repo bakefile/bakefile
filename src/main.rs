@@ -1,13 +1,11 @@
 use std::fs;
-use pest::Parser;
-use bakefile::Rule;
-use bakefile::{parse_targets, Error, BakeParser};
+use bakefile::{parse_recipe, Error};
 
 
 fn main() -> Result<(), Error>{
     let unparsed_file = fs::read_to_string("Bakefile").unwrap();
-    let pair = BakeParser::parse(Rule::bakefile, &unparsed_file).unwrap();
+    let recipe = parse_recipe(&unparsed_file);
 
-    println!("{:#?}", pair);
+    println!("{:#?}", recipe);
     Ok(())
 }
