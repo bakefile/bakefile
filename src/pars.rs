@@ -1,5 +1,6 @@
 use crate::ing::{Instruction, Recipe};
 
+#[allow(unused)]
 pub fn parse_recipe(data: &str) -> Recipe {
     let mut recipe = Recipe::blank();
     let mut instruction = Instruction::new("");
@@ -7,22 +8,40 @@ pub fn parse_recipe(data: &str) -> Recipe {
     let mut shell_command = String::new();
     let mut indent = 0;
     let mut lineno = 0;
+    let mut lpos = 0;
+    let mut pos = 0;
 
     for c in data.chars() {
+        pos += 1;
+        lpos += 1;
         match c {
             ':' => {
-                instruction.set_label(&target_name);
-                target_name = String::new();
-                break;
+                match indent {
+                    0 => {
+                        instruction.set_label(&target_name);
+                        target_name.clear();
+                    },
+                    _ => {
+                        shell_command.push(c)
+                    },
+                }
+
+                continue;
             },
             ' ' => {
                 indent += 1;
-                break;
+                continue;
             },
             '\n' => {
                 lineno += 1;
+                lpos = 0;
                 indent = 0;
-                instruction.add_action(&shell_command);
+                // eprintln!("\x1b[1;35;8;208m{:?}\x1b[0m", shell_command);
+                if !shell_command.is_empty() {
+                    instruction.add_action(&shell_command);
+                }
+            },
+            '$' |  '€' |  '₢' |  '₽' |  '₰' |  '₤' |  '¢' |  '#' |  '₳' |  '₷' |  '₸' |  '₪' |  '﷼' |  '௹' |  '૱' |  '৳' |  '₦' |  '₴' |  '₭' |  '₱' |  '₮' |  '₺' |  '₩' |  '฿' |  '₶' |  '₯' |  '₧' |  '₣' |  '₠' |  '₥' |  '¥' => {
             },
             _ => {
                 match indent {
@@ -36,6 +55,9 @@ pub fn parse_recipe(data: &str) -> Recipe {
                 }
             }
         }
+    }
+    if !shell_command.is_empty() {
+        instruction.add_action(&shell_command);
     }
     recipe.add_instruction(instruction);
     recipe
