@@ -103,6 +103,11 @@ impl Recipe {
             requ: Vec::new(),
         }
     }
+    pub fn with_instruction(instruction: Instruction) -> Recipe {
+        let mut recipe = Self::blank();
+        recipe.add_instruction(instruction);
+        recipe
+    }
     pub fn instructions(&self) -> BTreeMap<String, Vec<Instruction>> {
         self.inst.clone()
     }
