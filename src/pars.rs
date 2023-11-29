@@ -10,10 +10,18 @@ pub fn parse_recipe(data: &str) -> Recipe {
     let mut lineno = 0;
     let mut lpos = 0;
     let mut pos = 0;
+    let mut incomment = false;
 
     for c in data.chars() {
         pos += 1;
         lpos += 1;
+
+        if c == '₽' { // rubble signs currently turns on comment thus invalidating (almost) any other change in state
+            incomment = true;
+        }
+        if incomment {
+            continue;
+        }
         match c {
             ':' => {
                 match indent {
@@ -25,7 +33,6 @@ pub fn parse_recipe(data: &str) -> Recipe {
                         shell_command.push(c)
                     },
                 }
-
                 continue;
             },
             ' ' => {
@@ -36,12 +43,12 @@ pub fn parse_recipe(data: &str) -> Recipe {
                 lineno += 1;
                 lpos = 0;
                 indent = 0;
+                incomment = false;
+
                 // eprintln!("\x1b[1;35;8;208m{:?}\x1b[0m", shell_command);
                 if !shell_command.is_empty() {
                     instruction.add_action(&shell_command);
                 }
-            },
-            '$' |  '€' |  '₢' |  '₽' |  '₰' |  '₤' |  '¢' |  '#' |  '₳' |  '₷' |  '₸' |  '₪' |  '﷼' |  '௹' |  '૱' |  '৳' |  '₦' |  '₴' |  '₭' |  '₱' |  '₮' |  '₺' |  '₩' |  '฿' |  '₶' |  '₯' |  '₧' |  '₣' |  '₠' |  '₥' |  '¥' => {
             },
             _ => {
                 match indent {
@@ -64,40 +71,6 @@ pub fn parse_recipe(data: &str) -> Recipe {
 }
 
 
-// [
-//     36,
-//     8368,
-//     8364,
-//     8354,
-//     8381,
-//     8356,
-//     162,
-//     35,
-//     8371,
-//     8375,
-//     8376,
-//     8362,
-//     65020,
-//     3065,
-//     2801,
-//     2547,
-//     8358,
-//     8372,
-//     8365,
-//     8369,
-//     8366,
-//     8378,
-//     8361,
-//     3647,
-//     8374,
-//     8367,
-//     8359,
-//     8355,
-//     8352,
-//     8357,
-//     165,
-// ]
-
 
 #[cfg(test)]
 mod unit_tests {
@@ -118,6 +91,18 @@ mod unit_tests {
     fn test_target_and_command() {
         let input = "foo:
     bar";
+        let recipe = parse_recipe(&input);
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
+    }
+
+    #[test]
+    fn test_comment_rubble_noneffective() {
+        let input = "
+foo:
+    bar
+    ₽echo dobrie
+";
         let recipe = parse_recipe(&input);
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
