@@ -1,11 +1,16 @@
 use crate::ing::{Instruction, Recipe};
 
 fn comment_start(c: char) -> bool {
-    return c == '₽'
+    match c  {
+        '₽' | '₪' => true,
+        _ => false
+    }
 }
+
 fn comment_end(c: char) -> bool {
     return c == '\n'
 }
+
 
 #[allow(unused)]
 pub fn parse_recipe(data: &str) -> Recipe {
@@ -145,6 +150,21 @@ foo:
         let input = "foo:
     bar
     baz
+";
+        let recipe = parse_recipe(&input);
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
+    }
+
+    #[test]
+    fn test_target_and_comment_symbol_newsheqel() {
+        let input = "₪ noop
+foo:
+    bar
+    ₪ noop
+    baz
+
+₪ noop
 ";
         let recipe = parse_recipe(&input);
 
