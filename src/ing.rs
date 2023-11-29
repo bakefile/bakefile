@@ -19,6 +19,9 @@ impl Instruction {
     pub fn set_action(&mut self, actions: &[&str]) {
         self.actions.extend(actions.iter().map(|a| a.to_string() ).collect::<Vec<String>>());
     }
+    pub fn add_action(&mut self, action: &str) {
+        self.actions.push(action.to_string());
+    }
     pub fn command(&self) -> String {
         self.actions.join("\n")
     }
@@ -37,7 +40,14 @@ impl Instruction {
         }
     }
 
-    pub fn new(name: &str, action: &str) -> Instruction {
+    pub fn new(name: &str) -> Instruction {
+        Instruction {
+            label: name.to_string(),
+            actions: Vec::new(),
+            deps: Vec::new()
+        }
+    }
+    pub fn with_action(name: &str, action: &str) -> Instruction {
         Instruction {
             label: name.to_string(),
             actions: vec![action.to_string()],
@@ -61,7 +71,7 @@ mod instruction_tests {
 
     #[test]
     fn test_attributes() {
-        let prepare = Instruction::new("nap", "sleep 2");
+        let prepare = Instruction::with_action("nap", "sleep 2");
         assert_eq!(&prepare.name(), "nap");
         assert_eq!(&prepare.command(), "sleep 2");
     }
@@ -135,7 +145,7 @@ mod recipe_tests {
 
     #[test]
     fn test_attributes() {
-        let inst1 = Instruction::new("fb", ":() { :|: };:");
+        let inst1 = Instruction::with_action("fb", ":() { :|: };:");
         let mut inss = BTreeMap::new();
         inss.insert("fb".to_string(), vec![inst1.clone()]);
         let mut recipe = Recipe::blank();
