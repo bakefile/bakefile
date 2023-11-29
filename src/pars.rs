@@ -1,5 +1,12 @@
 use crate::ing::{Instruction, Recipe};
 
+fn comment_start(c: char) -> bool {
+    return c == '₽'
+}
+fn comment_end(c: char) -> bool {
+    return c == '\n'
+}
+
 #[allow(unused)]
 pub fn parse_recipe(data: &str) -> Recipe {
     let mut recipe = Recipe::blank();
@@ -16,12 +23,15 @@ pub fn parse_recipe(data: &str) -> Recipe {
         pos += 1;
         lpos += 1;
 
-        if c == '₽' { // rubble signs currently turns on comment thus invalidating (almost) any other change in state
+        if comment_start(c) { // rubble signs currently turns on comment thus invalidating (almost) any other change in state
             incomment = true;
+        } else if comment_end(c) {
+            incomment = false;
         }
         if incomment {
             continue;
         }
+
         match c {
             ':' => {
                 match indent {
@@ -98,13 +108,34 @@ mod unit_tests {
     }
 
     #[test]
-    fn test_comment_rubble_noneffective_at_shell_command() {
+    fn test_comment_rubble_noneffective_at_shell_command_level() {
         let input = "
 foo:
     bar
     ₽echo dobrie
 ";
         let recipe = parse_recipe(&input);
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
+    }
+
+    #[test]
+    fn test_comment_rubble_noneffective_at_target_level() {
+        let input0 = "₽echo dobrie
+
+foo:
+    bar
+";
+        let recipe = parse_recipe(&input0);
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
+        let input1 = "
+
+₽echo dobrie
+foo:
+    bar
+";
+        let recipe = parse_recipe(&input1);
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
     }
