@@ -48,6 +48,7 @@ pub fn parse_recipe(data: &str) -> Recipe {
                 // eprintln!("\x1b[1;35;8;208m{:?}\x1b[0m", shell_command);
                 if !shell_command.is_empty() {
                     instruction.add_action(&shell_command);
+                    shell_command.clear();
                 }
             },
             _ => {
@@ -97,7 +98,7 @@ mod unit_tests {
     }
 
     #[test]
-    fn test_comment_rubble_noneffective() {
+    fn test_comment_rubble_noneffective_at_shell_command() {
         let input = "
 foo:
     bar
