@@ -1,8 +1,9 @@
 use crate::ing::{Instruction, Recipe};
+use crate::knead::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '₦' | '₽' | '₪' | '₠' | '€' => true,
+        '₦' | '₽' | '₪' | '₠' | '₤' | '€' => true,
         _ => false
     }
 }
@@ -13,7 +14,7 @@ fn comment_end(c: char) -> bool {
 
 
 #[allow(unused)]
-pub fn parse_recipe(data: &str) -> Recipe {
+pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
     let mut recipe = Recipe::blank();
     let mut instruction = Instruction::new("");
     let mut target_name = String::new();
@@ -74,7 +75,7 @@ pub fn parse_recipe(data: &str) -> Recipe {
                     4 => {
                         shell_command.push(c)
                     },
-                    _ => todo!()
+                    _ => return Err(Error::RecipeParsingError(format!("unhandled character: {:?} at {}:{}", c, lineno, lpos)))
                 }
             }
         }
@@ -83,7 +84,7 @@ pub fn parse_recipe(data: &str) -> Recipe {
         instruction.add_action(&shell_command);
     }
     recipe.add_instruction(instruction);
-    recipe
+    Ok(recipe)
 }
 
 
@@ -93,45 +94,50 @@ mod unit_tests {
     use crate::pars::parse_recipe;
     use k9::assert_equal;
     use crate::ing::{Instruction, Recipe};
+    use crate::knead::{Error};
 
 
     #[test]
-    fn test_target_name() {
+    fn test_target_name() -> Result<(), Error> {
         let input = "foo:";
-        let recipe = parse_recipe(&input);
+        let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &[], &[])));
+        Ok(())
     }
 
     #[test]
-    fn test_target_and_command() {
+    fn test_target_and_command() -> Result<(), Error>  {
         let input = "foo:
     bar";
-        let recipe = parse_recipe(&input);
+        let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
+
+        Ok(())
     }
 
     #[test]
-    fn test_comment_rubble_noneffective_at_shell_command_level() {
+    fn test_comment_rubble_noneffective_at_shell_command_level() -> Result<(), Error>  {
         let input = "
 foo:
     bar
     ₽echo dobrie
 ";
-        let recipe = parse_recipe(&input);
+        let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
+        Ok(())
     }
 
     #[test]
-    fn test_comment_rubble_noneffective_at_target_level() {
+    fn test_comment_rubble_noneffective_at_target_level()  -> Result<(), Error> {
         let input0 = "₽echo dobrie
 
 foo:
     bar
 ";
-        let recipe = parse_recipe(&input0);
+        let recipe = parse_recipe(&input0)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
         let input1 = "
@@ -140,24 +146,26 @@ foo:
 foo:
     bar
 ";
-        let recipe = parse_recipe(&input1);
+        let recipe = parse_recipe(&input1)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
+        Ok(())
     }
 
     #[test]
-    fn test_target_and_2_commands() {
+    fn test_target_and_2_commands()  -> Result<(), Error> {
         let input = "foo:
     bar
     baz
 ";
-        let recipe = parse_recipe(&input);
+        let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
+        Ok(())
     }
 
     #[test]
-    fn test_target_and_comment_symbol_newsheqel() {
+    fn test_target_and_comment_symbol_newsheqel()  -> Result<(), Error> {
         let input = "₪ noop
 foo:
     bar
@@ -166,14 +174,15 @@ foo:
 
 ₪ noop
 ";
-        let recipe = parse_recipe(&input);
+        let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
+        Ok(())
     }
 
 
     #[test]
-    fn test_target_and_comment_symbol_naira() {
+    fn test_target_and_comment_symbol_naira()  -> Result<(), Error> {
         let input = "₦éééééé
 foo:
     bar
@@ -182,13 +191,14 @@ foo:
 
 ₦ééééééééééé
 ";
-        let recipe = parse_recipe(&input);
+        let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
+        Ok(())
     }
 
    #[test]
-    fn test_target_and_comment_symbol_euro_currencies() {
+    fn test_target_and_comment_symbol_euro_currencies()  -> Result<(), Error> {
         let input = "₠€
 foo:
     bar
@@ -197,10 +207,32 @@ foo:
 
 €₠₠€€₠₠€
 ";
-        let recipe = parse_recipe(&input);
+        let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
+        Ok(())
     }
-
-
 }
+
+
+// #[cfg(test)]
+// mod functional_tests {
+//     use std::fs;
+//     use crate::pars::parse_recipe;
+//     use k9::assert_equal;
+//     use crate::ing::{Instruction, Recipe};
+//     use crate::knead::{Error};
+
+
+//     #[test]
+//     fn test_parse_repo_bakefile()  -> Result<(), Error> {
+//         let unparsed_file = fs::read_to_string("Bakefile").unwrap();
+//         let recipe = parse_recipe(&unparsed_file)?;
+
+//         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("all", &[
+//             "cargo test",
+//         ], &[])));
+//         Ok(())
+//     }
+
+// }
