@@ -108,6 +108,7 @@ mod instruction_tests {
 pub struct Recipe {
     inst: BTreeMap<String, Vec<Instruction>>,
     keys: BTreeSet<String>,
+    ings: BTreeMap<String, String>,
     requ: Vec<String>,
 }
 impl Recipe {
@@ -115,6 +116,7 @@ impl Recipe {
         Recipe {
             inst: BTreeMap::new(),
             keys: BTreeSet::new(),
+            ings: BTreeMap::new(),
             requ: Vec::new(),
         }
     }
@@ -156,6 +158,32 @@ impl Recipe {
             }
         }
     }
+    pub fn add_ingredient(&mut self, name: &str, substance: &str) {
+        match self.ings.get_mut(name) {
+            Some(ingredient) => {
+                ingredient.push_str(substance)
+            }
+            None => {
+                self.ings
+                    .insert(
+                        format!("{}", name),
+                        format!("{}", substance),
+                    );
+            }
+        }
+    }
+    pub fn grok_instruction(&mut self, instruction: &Instruction) -> Vec<String> {
+        let mut steps = Vec::<String>::new();
+        for step in instruction.steps() {
+            let mut step = step.clone();
+            for (k, v) in self.ings.iter() {
+                let pat = format!("%[{}]", k);
+                step = step.replace(&pat, v);
+            }
+            steps.push(step);
+        }
+        steps
+    }
 }
 
 
@@ -181,6 +209,15 @@ mod recipe_tests {
         let mut recipe = Recipe::blank();
         recipe.add_instruction(inst1.clone());
         assert_eq!(recipe.main_instruction()?, inst1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_ingredients() -> Result<(), Error>{
+        let mut recipe = Recipe::blank();
+        let inst1 = Instruction::with_action("show-ingredient", "echo %[ING1]");
+        recipe.add_ingredient("ING1", "sauce");
+        assert_eq!(recipe.grok_instruction(&inst1), vec!["echo sauce".to_string()]);
         Ok(())
     }
 }
