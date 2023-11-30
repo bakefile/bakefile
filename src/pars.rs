@@ -2,7 +2,7 @@ use crate::ing::{Instruction, Recipe};
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '₽' | '₪' => true,
+        '₦' | '₽' | '₪' => true,
         _ => false
     }
 }
@@ -165,6 +165,22 @@ foo:
     baz
 
 ₪ noop
+";
+        let recipe = parse_recipe(&input);
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
+    }
+
+
+    #[test]
+    fn test_target_and_comment_symbol_naira() {
+        let input = "₦éééééé
+foo:
+    bar
+    ₦ééééééééééé
+    baz
+
+₦ééééééééééé
 ";
         let recipe = parse_recipe(&input);
 
