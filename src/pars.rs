@@ -239,7 +239,7 @@ mod functional_tests {
         let recipe = parse_recipe(&unparsed_file)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("all", &[
-            "cargo test",
+            "$(which cargo) test",
         ], &[])));
         Ok(())
     }
