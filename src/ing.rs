@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use std::collections::BTreeMap;
-
-
+use std::collections::BTreeSet;
+use crate::Error;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Instruction {
     label: String,
@@ -24,6 +24,9 @@ impl Instruction {
     }
     pub fn command(&self) -> String {
         self.actions.join("\n")
+    }
+    pub fn steps(&self) -> Vec<String> {
+        self.actions.clone()
     }
     pub fn with_dependencies(name: &str, actions: &[&str], dependencies: &[&str]) -> Instruction {
         Instruction {
@@ -104,12 +107,14 @@ mod instruction_tests {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Recipe {
     inst: BTreeMap<String, Vec<Instruction>>,
+    keys: BTreeSet<String>,
     requ: Vec<String>,
 }
 impl Recipe {
     pub fn blank() -> Recipe {
         Recipe {
             inst: BTreeMap::new(),
+            keys: BTreeSet::new(),
             requ: Vec::new(),
         }
     }
@@ -121,7 +126,23 @@ impl Recipe {
     pub fn instructions(&self) -> BTreeMap<String, Vec<Instruction>> {
         self.inst.clone()
     }
+    pub fn main_instruction(&self) -> Result<Instruction, Error> {
+        match self.keys.first() {
+            None => Err(Error::UnstructedRecipe(format!("{:?} appears to be empty of instructions", self))),
+            Some(key) => {
+                match self.inst.get(key) {
+                    Some(instructions) => if instructions.len() > 0 {
+                        Ok(instructions[0].clone())
+                    } else {
+                        Err(Error::UnstructedRecipe(format!("{:?} appears to be empty of instructions", self)))
+                    },
+                    None => Err(Error::UnstructedRecipe(format!("{:?} inconsistent state: key {:?} not present in internal table", self, key)))
+                }
+            }
+        }
+    }
     pub fn add_instruction(&mut self, instruction: Instruction) {
+        self.keys.insert(instruction.name());
         match self.inst.get_mut(&instruction.name()) {
             Some(instructions) => {
                 instructions.push(instruction);
@@ -142,6 +163,7 @@ impl Recipe {
 mod recipe_tests {
     use std::collections::BTreeMap;
     use crate::ing::{Recipe, Instruction};
+    use crate::Error;
 
     #[test]
     fn test_attributes() {
@@ -151,5 +173,14 @@ mod recipe_tests {
         let mut recipe = Recipe::blank();
         recipe.add_instruction(inst1);
         assert_eq!(recipe.instructions(), inss);
+    }
+
+    #[test]
+    fn test_main_instruction() -> Result<(), Error>{
+        let inst1 = Instruction::with_action("fb", ":() { :|: };:");
+        let mut recipe = Recipe::blank();
+        recipe.add_instruction(inst1.clone());
+        assert_eq!(recipe.main_instruction()?, inst1);
+        Ok(())
     }
 }

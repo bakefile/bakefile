@@ -73,6 +73,7 @@ dependencies = [
  "k9",
  "pest",
  "pest_derive",
+ "sanitation",
  "serde",
  "serde_derive",
 ]
@@ -401,6 +402,12 @@ name = "ryu"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ad4cc8da4ef723ed60bced201181d83791ad433213d8c24efffda1eec85d741"
+
+[[package]]
+name = "sanitation"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0aa379585b669d86d8ea8bd252dd6b2c04637c26e15e9969f21d6c3e5d36fd80"
 
 [[package]]
 name = "serde"

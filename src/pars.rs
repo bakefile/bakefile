@@ -19,15 +19,15 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
     let mut instruction = Instruction::new("");
     let mut target_name = String::new();
     let mut shell_command = String::new();
+    let mut inshell = false;
     let mut indent = 0;
-    let mut lineno = 0;
-    let mut lpos = 0;
+    let mut lineno = 1;
+    let mut lpos = 1;
     let mut pos = 0;
     let mut incomment = false;
 
     for c in data.chars() {
         pos += 1;
-        lpos += 1;
 
         if comment_start(c) { // rubble signs currently turns on comment thus invalidating (almost) any other change in state
             incomment = true;
@@ -37,6 +37,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
         if incomment {
             continue;
         }
+        lpos += 1;
 
         match c {
             ':' => {
@@ -52,7 +53,11 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                 continue;
             },
             ' ' => {
-                indent += 1;
+                if !inshell {
+                    indent += 1;
+                } else {
+                    shell_command.push(c)
+                }
                 continue;
             },
             '\r' => {
@@ -63,8 +68,8 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                 lpos = 0;
                 indent = 0;
                 incomment = false;
+                inshell = false;
 
-                // eprintln!("\x1b[1;35;8;208m{:?}\x1b[0m", shell_command);
                 if !shell_command.is_empty() {
                     instruction.add_action(&shell_command);
                     shell_command.clear();
@@ -76,6 +81,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                         target_name.push(c);
                     },
                     4 => {
+                        inshell = true;
                         shell_command.push(c)
                     },
                     _ => return Err(Error::RecipeParsingError(format!("unhandled character: {:?} at {}:{}", c, lineno, lpos)))
@@ -218,24 +224,24 @@ foo:
 }
 
 
-// #[cfg(test)]
-// mod functional_tests {
-//     use std::fs;
-//     use crate::pars::parse_recipe;
-//     use k9::assert_equal;
-//     use crate::ing::{Instruction, Recipe};
-//     use crate::knead::{Error};
-//
-//
-//     #[test]
-//     fn test_parse_repo_bakefile()  -> Result<(), Error> {
-//         let unparsed_file = fs::read_to_string("Bakefile").unwrap();
-//         let recipe = parse_recipe(&unparsed_file)?;
-//
-//         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("all", &[
-//             "cargo test",
-//         ], &[])));
-//         Ok(())
-//     }
-//
-// }
+#[cfg(test)]
+mod functional_tests {
+    use std::fs;
+    use crate::pars::parse_recipe;
+    use k9::assert_equal;
+    use crate::ing::{Instruction, Recipe};
+    use crate::knead::{Error};
+
+
+    #[test]
+    fn test_parse_repo_bakefile()  -> Result<(), Error> {
+        let unparsed_file = fs::read_to_string("Bakefile").unwrap();
+        let recipe = parse_recipe(&unparsed_file)?;
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("all", &[
+            "cargo test",
+        ], &[])));
+        Ok(())
+    }
+
+}

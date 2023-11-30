@@ -10,6 +10,7 @@ pub struct BakeParser;
 pub enum Error {
     RuleParsingError(pest::error::Error<Rule>),
     RecipeParsingError(String),
+    UnstructedRecipe(String),
     IOError(std::io::Error),
 }
 impl std::error::Error for Error {}
@@ -38,7 +39,8 @@ impl std::fmt::Display for Error {
                     write!(f, "RuleParsingError: {}", variant)
                 }
             },
-            Error::RecipeParsingError(e) => write!(f, "{}", e),
+            Error::RecipeParsingError(e) => write!(f, "RecipeParsingError: {}", e),
+            Error::UnstructedRecipe(e) => write!(f, "UnstructedRecipe: {}", e),
             Error::IOError(e) => write!(f, "IOError: {}", e),
         }
     }
