@@ -55,6 +55,9 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                 indent += 1;
                 continue;
             },
+            '\r' => {
+                lpos = 0;
+            },
             '\n' => {
                 lineno += 1;
                 lpos = 0;
@@ -222,17 +225,17 @@ foo:
 //     use k9::assert_equal;
 //     use crate::ing::{Instruction, Recipe};
 //     use crate::knead::{Error};
-
-
+//
+//
 //     #[test]
 //     fn test_parse_repo_bakefile()  -> Result<(), Error> {
 //         let unparsed_file = fs::read_to_string("Bakefile").unwrap();
 //         let recipe = parse_recipe(&unparsed_file)?;
-
+//
 //         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("all", &[
 //             "cargo test",
 //         ], &[])));
 //         Ok(())
 //     }
-
+//
 // }
