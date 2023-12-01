@@ -1,65 +1,30 @@
 pub use crate::Recipe;
 use sanitation::SString;
-use std::collections::HashMap;
 pub use std::process::{Command, Output};
-// use std::env::current_dir;
 
-// pub trait Shell<'a>: Display {
-pub trait Shell<'a> {
-    fn new() -> Self where Self: Sized;
-    fn command(&self) -> String {
-        "/usr/bin/env".to_string()
-    }
-    fn get_path(&self) -> String;
-    fn exec_params(&self) -> Vec<String> {
-        vec!["-c".to_string()]
-    }
-    fn spawn(&self, shell_command: &str) -> Result<Output, std::io::Error> {
-        let (mut cmd, args) = self.engage(shell_command);
-        let env : HashMap<String, String> = std::env::vars().collect();
-        Ok(cmd.args(args).envs(&env).output()?)
-    }
-    fn engage(&self, shell_command: &str) -> (Command, Vec<String>) {
-        let shell_executable_path = self.get_path();
-        let mut args: Vec<String> = if shell_executable_path.len() > 0 {
-            vec![shell_executable_path]
-        } else {
-            Vec::new()
-        };
-        args.extend(self.exec_params());
-        args.push(format!("'{}'", shell_command));
 
-        (Command::new(&self.command()), args)
+pub fn shell(cmd: &str) -> Output {
+    // let mut columellae = vec![format!("/bin/bash"), format!("-c"), format!("\"{}\"", cmd)];
+    let mut columellae = cmd.split(" ").map(|col| col.trim().to_string()).collect::<Vec<String>>();
+    let apex = columellae.remove(0);
+    let mut command = &mut Command::new(apex);
+    for spire in columellae {
+        command = command.arg(spire);
     }
+    command.output().expect(&format!("failed to follow instruction: {:?}", cmd))
 }
 
-#[derive(Debug, Clone)]
-pub struct Baker {
-    // cwd: String,
-}
-
-impl Shell<'_> for Baker {
-    fn new() -> Baker {
-        Baker {
-            // cwd: format!("{}", current_dir().expect("could not retrieve the current working directory of the current process").display())
-        }
-    }
-    fn get_path(&self) -> String {
-        format!("bash")
-    }
-}
-
-pub fn shell<S: for <'a> Shell<'a>>(cmd: &str) -> Output {
-    let shell = S::new();
-    shell.spawn(cmd).expect(&format!("could not execute shell command {:?}", cmd))
-}
+pub struct Baker {}
 
 impl Baker {
+    pub fn new() -> Baker {
+        Baker{}
+    }
     pub fn perform(recipe: Recipe) {
         for (_, instructions) in recipe.instructions() {
             for instruction in instructions {
                 for step in instruction.steps() {
-                    let output = shell::<Baker>(&step);
+                    let output = shell(&step);
                     let stdout = SString::new(&output.stdout);
                     let stderr = SString::new(&output.stderr);
                     println!("{}", stdout.soft_word());

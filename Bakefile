@@ -1,2 +1,2 @@
 all:
-    $(which cargo) test
+    cargo test
