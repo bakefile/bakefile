@@ -1,10 +1,8 @@
-use std::fs;
-use bakefile::{parse_recipe, Baker};
+use bakefile::{parse_recipe_from_path, Baker};
 
 
 fn main() {
-    let unparsed_file = fs::read_to_string("Bakefile").unwrap();
-    let recipe = match parse_recipe(&unparsed_file) {
+    let recipe = match parse_recipe_from_path("Bakefile") {
         Ok(recipe) => recipe,
         Err(e) => {
             eprintln!("{}", e);
