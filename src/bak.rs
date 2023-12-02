@@ -21,24 +21,21 @@ impl Baker {
         Baker{}
     }
     pub fn perform(recipe: Recipe) {
-        for (_, instructions) in recipe.instructions() {
-            for instruction in instructions {
-                for step in instruction.steps() {
-                    let output = shell(&step);
-                    let stdout = SString::new(&output.stdout);
-                    let stderr = SString::new(&output.stderr);
-                    println!("{}", stdout.soft_word());
-                    eprintln!("{}", stderr.soft_word());
-                    match output.status.code() {
-                        Some(code) => {
-                            if code != 0 {
-                                std::process::exit(code);
-                            }
-                        },
-                        None => {
-                            std::process::exit(3);
-                        }
+        let instruction = recipe.main_instruction().expect(&format!("Baker cannot perform recipe {}", recipe));
+        for step in instruction.steps() {
+            let output = shell(&step);
+            let stdout = SString::new(&output.stdout);
+            let stderr = SString::new(&output.stderr);
+            println!("{}", stdout.soft_word());
+            eprintln!("{}", stderr.soft_word());
+            match output.status.code() {
+                Some(code) => {
+                    if code != 0 {
+                        std::process::exit(code);
                     }
+                },
+                None => {
+                    std::process::exit(3);
                 }
             }
         }
