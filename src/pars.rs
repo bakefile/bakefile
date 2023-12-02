@@ -1,9 +1,10 @@
+use std::fs;
 use crate::ing::{Instruction, Recipe};
 use crate::knead::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '₦' | '₽' | '₪' | '₠' | '₤' | '€' => true,
+        '₽' | '₪' | '₠' | '₤' | '₦' | '€' => true,
         _ => false
     }
 }
@@ -13,7 +14,12 @@ fn comment_end(c: char) -> bool {
 }
 
 
-#[allow(unused)]
+pub fn parse_recipe_from_path(path: &str) -> Result<Recipe, Error> {
+    let unparsed_file = fs::read_to_string(path).expect(&format!("failed to read path {}", path));
+    parse_recipe(&unparsed_file)
+}
+
+
 pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
     let mut recipe = Recipe::blank();
     let mut instruction = Instruction::new("");
@@ -29,7 +35,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
     for c in data.chars() {
         pos += 1;
 
-        if comment_start(c) { // rubble signs currently turns on comment thus invalidating (almost) any other change in state
+        if comment_start(c) {
             incomment = true;
         } else if comment_end(c) {
             incomment = false;
@@ -84,7 +90,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                         inshell = true;
                         shell_command.push(c)
                     },
-                    _ => return Err(Error::RecipeParsingError(format!("unhandled character: {:?} at {}:{}", c, lineno, lpos)))
+                    _ => return Err(Error::RecipeParsingError(format!("unhandled symbol: {:?} at {}:{}:{}", c, lineno, lpos, pos)))
                 }
             }
         }
@@ -127,7 +133,7 @@ mod unit_tests {
     }
 
     #[test]
-    fn test_comment_rubble_noneffective_at_shell_command_level() -> Result<(), Error>  {
+    fn test_comment_ruble_noneffective_at_shell_command_level() -> Result<(), Error>  {
         let input = "
 foo:
     bar
@@ -140,7 +146,7 @@ foo:
     }
 
     #[test]
-    fn test_comment_rubble_noneffective_at_target_level()  -> Result<(), Error> {
+    fn test_comment_ruble_noneffective_at_target_level()  -> Result<(), Error> {
         let input0 = "₽echo dobrie
 
 foo:
@@ -221,6 +227,7 @@ foo:
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
         Ok(())
     }
+
 }
 
 

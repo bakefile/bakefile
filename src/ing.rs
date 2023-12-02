@@ -106,19 +106,37 @@ mod instruction_tests {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Recipe {
+    path: Option<String>,
     inst: BTreeMap<String, Vec<Instruction>>,
     keys: BTreeSet<String>,
     ings: BTreeMap<String, String>,
     requ: Vec<String>,
 }
+impl std::fmt::Display for Recipe {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match &self.path {
+            Some(path) => {
+                write!(f, "Recipe({})", path)
+            },
+            None => {
+                write!(f, "Recipe[{}]", self.keys.iter().map(|k|k.to_string()).collect::<Vec<String>>().join(", "))
+            }
+        }
+    }
+}
 impl Recipe {
     pub fn blank() -> Recipe {
         Recipe {
+            path: None,
             inst: BTreeMap::new(),
             keys: BTreeSet::new(),
             ings: BTreeMap::new(),
             requ: Vec::new(),
         }
+    }
+    pub fn with_path(&mut self, path: &str) -> Recipe {
+        self.path = Some(path.to_string());
+        self.clone()
     }
     pub fn with_instruction(instruction: Instruction) -> Recipe {
         let mut recipe = Self::blank();
