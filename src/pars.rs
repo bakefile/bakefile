@@ -1,6 +1,6 @@
 use std::fs;
 use crate::ing::{Instruction, Recipe};
-use crate::knead::Error;
+use crate::errors::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
@@ -109,7 +109,7 @@ mod unit_tests {
     use crate::pars::parse_recipe;
     use k9::assert_equal;
     use crate::ing::{Instruction, Recipe};
-    use crate::knead::{Error};
+    use crate::errors::{Error};
 
 
     #[test]
@@ -237,7 +237,7 @@ mod functional_tests {
     use crate::pars::parse_recipe;
     use k9::assert_equal;
     use crate::ing::{Instruction, Recipe};
-    use crate::knead::{Error};
+    use crate::errors::{Error};
 
 
     #[test]

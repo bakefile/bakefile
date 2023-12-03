@@ -1,7 +1,9 @@
 use serde::{Serialize, Deserialize};
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use crate::Error;
+use crate::errors::Error;
+
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Instruction {
     label: String,

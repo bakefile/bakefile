@@ -6,45 +6,6 @@ use crate::ing::{Instruction, Recipe};
 #[grammar = "bake.pest"]
 pub struct BakeParser;
 
-#[derive(Debug)]
-pub enum Error {
-    RuleParsingError(pest::error::Error<Rule>),
-    RecipeParsingError(String),
-    UnstructedRecipe(String),
-    IOError(std::io::Error),
-}
-impl std::error::Error for Error {}
-
-impl From<pest::error::Error<Rule>> for Error {
-    fn from(e: pest::error::Error<Rule>) -> Self {
-        Error::RuleParsingError(e)
-    }
-}
-impl From<String> for Error {
-    fn from(e: String) -> Self {
-        Error::RecipeParsingError(e)
-    }
-}
-impl From<std::io::Error> for Error {
-    fn from(e: std::io::Error) -> Self {
-        Error::IOError(e)
-    }
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Error::RuleParsingError(e) => match e {
-                pest::error::Error { variant, .. } => {
-                    write!(f, "RuleParsingError: {}", variant)
-                }
-            },
-            Error::RecipeParsingError(e) => write!(f, "RecipeParsingError: {}", e),
-            Error::UnstructedRecipe(e) => write!(f, "UnstructedRecipe: {}", e),
-            Error::IOError(e) => write!(f, "IOError: {}", e),
-        }
-    }
-}
 
 pub fn parse_targets(data: &str) -> Recipe {
     let pair = BakeParser::parse(Rule::bakefile, data).unwrap().next().unwrap();
@@ -118,31 +79,32 @@ pub fn parse_targets(data: &str) -> Recipe {
     }
     recipe
 }
+
 // #[cfg(test)]
 // mod functional_tests {
 //     use crate::parse_targets;
 //     use std::fs;
 //     use k9::assert_equal;
 //     use crate::ing::{Instruction, Recipe};
-
-
+//
+//
 //     #[test]
 //     fn test_simple_0_comments_1_target_2_subshells() {
 //         let unparsed_file = fs::read_to_string("tests/simple/Bakefile.0c1t2s").unwrap();
 //         let recipe = parse_targets(&unparsed_file);
-
+//
 //         let mut lecipe = Recipe::blank();
 //         lecipe.add_instruction(Instruction::with_dependencies("all", &["echo \"hello world\"", "echo \"hallö welt\" > /dev/random"], &[]));
 //         assert_equal!(recipe, lecipe);
-
+//
 //     }
-
+//
 //     #[test]
 //     fn test_simple_0_comments_3_target_3_subshells() {
 //         let unparsed_file = fs::read_to_string("tests/simple/Bakefile.0c3t3s").unwrap();
 //         let recipe = parse_targets(&unparsed_file);
 //         let mut lecipe = Recipe::blank();
-
+//
 //         lecipe.add_instruction(Instruction::with_dependencies("hw", &[], &["en", "de"]));
 //         lecipe.add_instruction(Instruction::with_dependencies("en", &["echo \"hello world\""], &[]));
 //         lecipe.add_instruction(Instruction::with_dependencies("de", &["echo \"hallö welt\" > /dev/random"], &[]));
