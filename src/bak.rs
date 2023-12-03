@@ -1,7 +1,5 @@
+use shells::sh;
 pub use crate::ing::Recipe;
-pub use crate::execute::{Bash, Sh};
-pub use crate::execute::Shell;
-use sanitation::SString;
 pub use std::process::{Command, Output};
 
 
@@ -25,20 +23,13 @@ impl Baker {
     pub fn perform(recipe: Recipe) {
         let instruction = recipe.main_instruction().expect(&format!("Baker cannot perform recipe {}", recipe));
         for step in instruction.steps() {
-            let output = Sh::new(None).execute(&step).expect(&format!("failed execute step: {:?}", step));
-            let stdout = SString::new(&output.stdout);
-            let stderr = SString::new(&output.stderr);
-            println!("{}", stdout.soft_word());
-            eprintln!("{}", stderr.soft_word());
-            match output.status.code() {
-                Some(code) => {
-                    if code != 0 {
-                        std::process::exit(code);
-                    }
-                },
-                None => {
-                    std::process::exit(3);
-                }
+            let (code, stdout, stderr) = sh!("{}", step);
+            println!("{}", stdout);
+            eprintln!("{}", stderr);
+            if code != 0 {
+                std::process::exit(code);
+            } else {
+                std::process::exit(3);
             }
         }
     }
