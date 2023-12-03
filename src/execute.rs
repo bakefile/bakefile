@@ -10,13 +10,8 @@ pub trait Shell<'a> {
     fn exec_params(&self) -> Vec<String> {
         vec!["-c".to_string()]
     }
-    fn spawn(&self, shell_command: &str) -> Result<Output, std::io::Error> {
-        let shell_executable_path = self.get_path();
-        let mut args: Vec<String> = if shell_executable_path.len() > 0 {
-            vec![shell_executable_path]
-        } else {
-            Vec::new()
-        };
+    fn execute(&self, shell_command: &str) -> Result<Output, std::io::Error> {
+        let mut args = Vec::new();
         args.extend(self.exec_params());
         args.push(format!("'{}'", shell_command));
         let mut cmd = Command::new(&self.command());
