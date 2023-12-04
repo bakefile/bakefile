@@ -4,7 +4,7 @@ use crate::errors::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '₽' | '₪' | '₠' | '₤' | '₦' | '€' => true,
+        '₽' | '₪' | '₠' | '₤' | '₦' | '€' | '₢' => true,
         _ => false
     }
 }
@@ -225,6 +225,23 @@ foo:
         let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
+        Ok(())
+    }
+
+   #[test]
+    fn test_target_failed_currency_merely_allowed_for_comment()  -> Result<(), Error> {
+        let input = "₢A
+₢B
+₢C
+₢D
+run:
+    ₢Hey look, I am here and need attention
+    ignite
+    ₢Terrible ideas coming from that era
+";
+        let recipe = parse_recipe(&input)?;
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("run", &["ignite"], &[])));
         Ok(())
     }
 
