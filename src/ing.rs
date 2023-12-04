@@ -136,6 +136,29 @@ impl Recipe {
             requ: Vec::new(),
         }
     }
+    pub fn resolve_dependencies(&self, instruction_label: &str) -> Option<Vec<String>> {
+        let mut instruction_labels = Vec::<String>::new();
+        match self.inst.get(instruction_label) {
+            None => return None,
+            Some(instructions) => {
+                for inst in instructions {
+                    let deps = inst.dependencies();
+                    if deps.len() > 0 {
+                        for dep in deps {
+                            match self.resolve_dependencies(&dep) {
+                                Some(labels) =>{
+                                    instruction_labels.extend(labels);
+                                },
+                                None => {}
+                            }
+                        }
+                    }
+                    instruction_labels.push(inst.name());
+                }
+            }
+        };
+        Some(instruction_labels)
+    }
     pub fn with_path(&mut self, path: &str) -> Recipe {
         self.path = Some(path.to_string());
         self.clone()
@@ -238,6 +261,23 @@ mod recipe_tests {
         let inst1 = Instruction::with_action("show-ingredient", "echo %[ING1]");
         recipe.add_ingredient("ING1", "sauce");
         assert_eq!(recipe.grok_instruction(&inst1), vec!["echo sauce".to_string()]);
+        Ok(())
+    }
+
+    #[test]
+    fn test_dependency_resolution_two_dimensional() -> Result<(), Error>{
+        let mut recipe = Recipe::with_instruction(Instruction::with_action("bar", "echo 'and the bunnymen'"));
+        recipe.add_instruction(Instruction::with_dependencies("foo", &[ "echo 'and the bunnymen'"], &["bar"]));
+        assert_eq!(recipe.resolve_dependencies("foo"), Some(vec!["bar".to_string(), "foo".to_string()]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_dependency_resolution_three_dimensional() -> Result<(), Error>{
+        let mut recipe = Recipe::with_instruction(Instruction::with_action("gamel", "echo 'G'"));
+        recipe.add_instruction(Instruction::with_dependencies("aleph", &[ "echo 'A'"], &["bet"]));
+        recipe.add_instruction(Instruction::with_dependencies("bet", &[ "echo 'B'"], &["gamel"]));
+        assert_eq!(recipe.resolve_dependencies("aleph"), Some(vec!["gamel".to_string(), "bet".to_string(), "aleph".to_string()]));
         Ok(())
     }
 }
