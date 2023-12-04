@@ -33,6 +33,7 @@ symbols.
 - Each "instruction" can contain either "steps" or "dependencies" or both
 - Uses 4 spaces for steps
 - Tabs are not supported
+- Uncommonly allows currency symbols as comments
 
 ## USAGE
 
