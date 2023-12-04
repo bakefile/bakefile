@@ -13,21 +13,16 @@ exclude = ["tests"]
 
 [dependencies]
 clap = { version = "4.4.8", features = ["env", "string", "unicode", "derive", "wrap_help"] }
-pest = { version = "2.7.5", features = ["pretty-print"] }
-pest_derive = "2.7.5"
 sanitation = "0.0.1"
 serde = { version = "1.0.193", features = ["derive", "serde_derive"] }
 serde_derive = "1.0.193"
 
-[build-dependencies]
-pest = { version = "2.7.5", features = ["pretty-print"] }
-pest_derive = "2.7.5"
 
 [dev-dependencies]
 k9 = "0.11.6"
 
 [[bin]]
-name = "bakefile"
+name = "bake"
 path = "src/main.rs"
 bench = false
 

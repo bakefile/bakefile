@@ -4,7 +4,7 @@ use crate::errors::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '₽' | '₪' | '₠' | '₤' | '₦' | '€' | '₢' | '₧' => true,
+        '¢' | '₽' | '¥' | '₯' | '฿' | '$' | '₪' | '₠' | '₤' | '₦' | '€' | '₢' | '₧' => true,
         _ => false
     }
 }
