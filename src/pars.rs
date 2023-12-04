@@ -67,6 +67,9 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
         lpos += 1;
 
         match c {
+            '\t' => {
+                continue
+            }
             ':' => {
                 match indent {
                     0 => {
