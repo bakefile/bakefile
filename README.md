@@ -14,6 +14,28 @@
 <!-- # ⚠️ ATTENZIONE! ⚠️ -->
 <!-- # ⚠️ WARNING! ⚠️ -->
 
-## 🚧👷 WORK-IN-PROGRESS 👷🚧
+# 🚧👷 STILL WORK-IN-PROGRESS 👷🚧
 
-![https://media.giphy.com/media/l3q2R3KZC4G5j658s/giphy.gif](https://media.giphy.com/media/l3q2R3KZC4G5j658s/giphy.gif)
+---
+
+```shell
+cargo install bakefile
+```
+
+`bake` is kind of like `make` in that it runs subprocesses but its
+domain makes references to baking and its comments takes currency
+symbols.
+
+## Features:
+
+- Each `Bakefile` is a "recipe"
+- Each "recipe" declares "instructions"
+- Each "instruction" can contain either "steps" or "dependencies" or both
+- Uses 4 spaces for steps
+- Tabs are not supported
+
+## USAGE
+
+```shell
+bake
+```
