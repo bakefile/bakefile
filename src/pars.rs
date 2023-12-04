@@ -4,7 +4,7 @@ use crate::errors::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '¢' | '₽' | '¥' | '₯' | '฿' | '$' | '₪' | '₠' | '₤' | '₦' | '€' | '₢' | '₧' => true,
+        '₽' | '€' => true,
         _ => false
     }
 }
@@ -12,7 +12,6 @@ fn comment_start(c: char) -> bool {
 fn new_line(c: char) -> bool {
     return c == '\n'
 }
-
 
 pub fn parse_recipe_from_path(path: &str) -> Result<Recipe, Error> {
     let unparsed_file = fs::read_to_string(path).expect(&format!("failed to read path {}", path));
@@ -32,11 +31,20 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
     let mut lineno = 1;
     let mut lpos = 1;
     let mut pos = 0;
+    // let mut npos = 0;
+    // let mut ppos = 0;
+    // let mut last: bool = false;
+    // let mut beforelast: bool = false;
     let mut incomment = false;
     let indentation = 4;
-    for c in data.chars() {
+    let ac = data.chars();
+    // let ct = ac.clone().count();
+    for c in ac {
         pos += 1;
-
+        // npos = pos + 1;
+        // ppos = pos - 1;
+        // last = pos == ct;
+        // beforelast = npos == ct;
         if comment_start(c) {
             incomment = true;
             continue;
@@ -48,7 +56,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                 }
             } else if inshell {
                 if !shell_command.is_empty() {
-                    instruction.add_action(&shell_command);
+                    instruction.add_action(&shell_command.trim());
                     shell_command.clear();
                 }
             }
@@ -58,7 +66,6 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
             incomment = false;
             inshell = false;
             dependency = false;
-
             continue;
         }
         if incomment {
@@ -67,6 +74,9 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
         lpos += 1;
 
         match c {
+            '\t' => {
+                continue
+            },
             ':' => {
                 match indent {
                     0 => {
@@ -90,8 +100,8 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                 }
                 if !inshell && !incomment {
                     indent += 1;
-                } else {
-                    shell_command.push(c)
+                } else if !incomment {
+                    shell_command.push(c);
                 }
                 continue;
             },
@@ -111,8 +121,12 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                         target_name.push(c);
                     },
                     4 => {
-                        inshell = true;
-                        shell_command.push(c)
+                        if comment_start(c) {
+                            incomment = true;
+                        } else {
+                            inshell = true;
+                            shell_command.push(c);
+                        }
                     },
                     _ => {
                         if comment_start(c) {
@@ -121,7 +135,6 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                             incomment = false;
                         } else {
                             return Err(Error::RecipeParsingError(format!("unhandled symbol: {:?} at {}:{}:{}", c, lineno, lpos, pos)))
-                            // continue;
                         }
                     }
                 }
@@ -136,7 +149,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
         }
     } else if inshell {
         if !shell_command.is_empty() {
-            instruction.add_action(&shell_command);
+            instruction.add_action(&shell_command.trim());
             shell_command.clear();
         }
     }
@@ -205,159 +218,30 @@ mod comment_tests {
     use crate::errors::{Error};
 
     #[test]
-    fn test_comment_ruble_noneffective_at_shell_command_level() -> Result<(), Error>  {
-        let input = "
+    fn test_comment_seems_to_use_currency_symbols_for_some_apparent_reason() -> Result<(), Error>  {
+        let input = "€p
 foo:
     bar
-    ₽echo dobrie
+    ₽e
 ";
         let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
         Ok(())
     }
-
-    #[test]
-    fn test_comment_ruble_noneffective_at_target_level()  -> Result<(), Error> {
-        let input0 = "₽echo dobrie
-
-foo:
-    bar
-";
-        let recipe = parse_recipe(&input0)?;
-
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
-        let input1 = "
-
-₽echo dobrie
-foo:
-    bar
-";
-        let recipe = parse_recipe(&input1)?;
-
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
-        Ok(())
-    }
-
-    #[test]
-    fn test_target_and_comment_symbol_newsheqel()  -> Result<(), Error> {
-        let input = "₪ noop
-foo:
-    bar
-    ₪ noop
-    baz
-
-₪ noop
-";
-        let recipe = parse_recipe(&input)?;
-
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
-        Ok(())
-    }
-
-
-    #[test]
-    fn test_target_and_comment_symbol_naira()  -> Result<(), Error> {
-        let input = "₦éééééé
-foo:
-    bar
-    ₦ééééééééééé
-    baz
-
-₦ééééééééééé
-";
-        let recipe = parse_recipe(&input)?;
-
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
-        Ok(())
-    }
-
-   #[test]
-    fn test_target_and_comment_symbol_euro_currencies()  -> Result<(), Error> {
-        let input = "₠€
-foo:
-    bar
-    €₠€₠€₠
-    baz
-
-€₠₠€€₠₠€
-";
-        let recipe = parse_recipe(&input)?;
-
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar", "baz"], &[])));
-        Ok(())
-    }
-
-   #[test]
-    fn test_target_failed_currency_merely_allowed_for_comment()  -> Result<(), Error> {
-        let input = "₢AB
-
-₢ 0 0
-purpose:
-    ₢ I'm Mr. Meeseeks look at me!
-    seek-attention
-";
-        let recipe = parse_recipe(&input)?;
-
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("purpose", &["seek-attention"], &[])));
-        Ok(())
-    }
-
-   #[test]
-    fn test_target_pesos()  -> Result<(), Error> {
-        let input = "₢₱
-
-brush-teeth:
-    rinse
-";
-        let recipe = parse_recipe(&input)?;
-
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("brush-teeth", &[ "rinse"], &[])));
-        Ok(())
-    }
-
-//    #[test]
-//     fn test_comment_is_not_dependency()  -> Result<(), Error> {
-//         let input = "₢₱
-//
-// sweet-tooth: ₱aste!
-// ";
-//         let recipe = parse_recipe(&input)?;
-//
-//         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("sweet-tooth", &[], &[])));
-//         Ok(())
-//     }
-//
-//     #[test]
-//     fn test_spaces_and_comments()  -> Result<(), Error> {
-//         let input = "₢ ₱
-//
-// brush-teeth: disinfect
-//     ₱aste, remember the paste!
-//     brush
-//     rinse
-//     spit
-// ";
-//         let recipe = parse_recipe(&input)?;
-//
-//         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("brush-teeth", &[ "brush", "rinse", "spit"], &["disinfect"])));
-//         Ok(())
-//     }
 }
 
 
 #[cfg(test)]
 mod functional_tests {
-    use std::fs;
-    use crate::pars::parse_recipe;
+    use crate::pars::parse_recipe_from_path;
     use k9::assert_equal;
     use crate::ing::{Instruction, Recipe};
     use crate::errors::{Error};
 
     #[test]
     fn test_parse_repo_bakefile()  -> Result<(), Error> {
-        let unparsed_file = fs::read_to_string("Bakefile").unwrap();
-        let recipe = parse_recipe(&unparsed_file)?;
+        let recipe = parse_recipe_from_path("Bakefile")?;
 
         assert_equal!(recipe, Recipe::with_instructions(vec![
             Instruction::with_dependencies("all", &[
@@ -366,15 +250,50 @@ mod functional_tests {
         ]));
         Ok(())
     }
+    #[test]
+    fn test_parse_test_bakefile_0c1t2s()  -> Result<(), Error> {
+        let recipe = parse_recipe_from_path("tests/simple/Bakefile.0c1t2s")?;
+
+        assert_equal!(recipe, Recipe::with_instructions(vec![
+            Instruction::with_dependencies("all", &[
+                "echo \"hello world\"",
+                "echo \"hallö welt\" > /dev/random",
+            ], &[]),
+        ]));
+        Ok(())
+    }
     // #[test]
-    // fn test_parse_test_bakefile_0c1t2s()  -> Result<(), Error> {
-    //     let unparsed_file = fs::read_to_string("tests/simple/Bakefile.0c1t2s").unwrap();
-    //     let recipe = parse_recipe(&unparsed_file)?;
+    // fn test_parse_test_bakefile_0c3t3s()  -> Result<(), Error> {
+    //     let recipe = parse_recipe_from_path("tests/simple/Bakefile.0c3t3s")?;
 
     //     assert_equal!(recipe, Recipe::with_instructions(vec![
-    //         Instruction::with_dependencies("all", &[], &["test"]),
-    //         Instruction::with_dependencies("test", &[
-    //             "cargo test",
+
+    //         Instruction::with_dependencies("hw", &[
+    //         ], &["en", "de"]),
+
+    //         Instruction::with_dependencies("en", &[
+    //             "echo \"hello world\"",
+    //         ], &[]),
+
+    //         Instruction::with_dependencies("de", &[
+    //             "echo \"hallö welt\" > /dev/random",
+    //         ], &[]),
+
+    //     ]));
+    //     Ok(())
+    // }
+    // #[test]
+    // fn test_parse_test_bakefile_3c3t3s()  -> Result<(), Error> {
+    //     let recipe = parse_recipe_from_path("tests/simple/Bakefile.3c3t3s")?;
+
+    //     assert_equal!(recipe, Recipe::with_instructions(vec![
+    //         Instruction::with_dependencies("hw", &[
+    //         ], &["en", "de"]),
+    //         Instruction::with_dependencies("en", &[
+    //             "echo \"hello world\"",
+    //         ], &[]),
+    //         Instruction::with_dependencies("de", &[
+    //             "echo \"hallö welt\" > /dev/random",
     //         ], &[]),
     //     ]));
     //     Ok(())

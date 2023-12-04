@@ -1,2 +1,5 @@
+€ comment
+₽ comment
+
 all:
     cargo test

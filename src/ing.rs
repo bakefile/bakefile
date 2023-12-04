@@ -110,7 +110,7 @@ mod instruction_tests {
 pub struct Recipe {
     path: Option<String>,
     inst: BTreeMap<String, Vec<Instruction>>,
-    keys: BTreeSet<String>,
+    order: BTreeSet<String>,
     ings: BTreeMap<String, String>,
     requ: Vec<String>,
 }
@@ -121,7 +121,7 @@ impl std::fmt::Display for Recipe {
                 write!(f, "Recipe({})", path)
             },
             None => {
-                write!(f, "Recipe[{}]", self.keys.iter().map(|k|k.to_string()).collect::<Vec<String>>().join(", "))
+                write!(f, "Recipe[{}]", self.order.iter().map(|k|k.to_string()).collect::<Vec<String>>().join(", "))
             }
         }
     }
@@ -131,7 +131,7 @@ impl Recipe {
         Recipe {
             path: None,
             inst: BTreeMap::new(),
-            keys: BTreeSet::new(),
+            order: BTreeSet::new(),
             ings: BTreeMap::new(),
             requ: Vec::new(),
         }
@@ -179,7 +179,7 @@ impl Recipe {
         self.inst.clone()
     }
     pub fn main_instruction(&self) -> Result<Instruction, Error> {
-        match self.keys.first() {
+        match self.order.first() {
             None => Err(Error::UnstructedRecipe(format!("{:?} appears to be empty of instructions", self))),
             Some(key) => {
                 match self.inst.get(key) {
@@ -200,7 +200,7 @@ impl Recipe {
         }
     }
     pub fn add_instruction(&mut self, instruction: Instruction) {
-        self.keys.insert(instruction.name());
+        self.order.insert(instruction.name());
         match self.inst.get_mut(&instruction.name()) {
             Some(instructions) => {
                 instructions.push(instruction);
