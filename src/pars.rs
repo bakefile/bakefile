@@ -354,16 +354,29 @@ mod functional_tests {
     use crate::ing::{Instruction, Recipe};
     use crate::errors::{Error};
 
-
     #[test]
     fn test_parse_repo_bakefile()  -> Result<(), Error> {
         let unparsed_file = fs::read_to_string("Bakefile").unwrap();
         let recipe = parse_recipe(&unparsed_file)?;
 
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("all", &[
-            "cargo test",
-        ], &[])));
+        assert_equal!(recipe, Recipe::with_instructions(vec![
+            Instruction::with_dependencies("all", &[
+                "cargo test",
+            ], &[]),
+        ]));
         Ok(())
     }
+    // #[test]
+    // fn test_parse_test_bakefile_0c1t2s()  -> Result<(), Error> {
+    //     let unparsed_file = fs::read_to_string("tests/simple/Bakefile.0c1t2s").unwrap();
+    //     let recipe = parse_recipe(&unparsed_file)?;
 
+    //     assert_equal!(recipe, Recipe::with_instructions(vec![
+    //         Instruction::with_dependencies("all", &[], &["test"]),
+    //         Instruction::with_dependencies("test", &[
+    //             "cargo test",
+    //         ], &[]),
+    //     ]));
+    //     Ok(())
+    // }
 }

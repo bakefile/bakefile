@@ -168,6 +168,13 @@ impl Recipe {
         recipe.add_instruction(instruction);
         recipe
     }
+    pub fn with_instructions(instructions: Vec<Instruction>) -> Recipe {
+        let mut recipe = Self::blank();
+        for instruction in instructions {
+            recipe.add_instruction(instruction);
+        }
+        recipe
+    }
     pub fn instructions(&self) -> BTreeMap<String, Vec<Instruction>> {
         self.inst.clone()
     }
@@ -184,6 +191,12 @@ impl Recipe {
                     None => Err(Error::UnstructedRecipe(format!("{:?} inconsistent state: key {:?} not present in internal table", self, key)))
                 }
             }
+        }
+    }
+    pub fn get_instructions(&self, name: &str) -> Vec<Instruction> {
+        match self.inst.get(name) {
+            Some(instructions) => instructions.clone(),
+            None => vec![self.main_instruction().unwrap()],
         }
     }
     pub fn add_instruction(&mut self, instruction: Instruction) {
@@ -215,7 +228,7 @@ impl Recipe {
             }
         }
     }
-    pub fn grok_instruction(&mut self, instruction: &Instruction) -> Vec<String> {
+    pub fn translate_instruction(&mut self, instruction: &Instruction) -> Vec<String> {
         let mut steps = Vec::<String>::new();
         for step in instruction.steps() {
             let mut step = step.clone();
@@ -260,7 +273,7 @@ mod recipe_tests {
         let mut recipe = Recipe::blank();
         let inst1 = Instruction::with_action("show-ingredient", "echo %[ING1]");
         recipe.add_ingredient("ING1", "sauce");
-        assert_eq!(recipe.grok_instruction(&inst1), vec!["echo sauce".to_string()]);
+        assert_eq!(recipe.translate_instruction(&inst1), vec!["echo sauce".to_string()]);
         Ok(())
     }
 
