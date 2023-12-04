@@ -31,30 +31,28 @@ jobs:
         with:
           command: test
 
-  # ubuntu_cargo_build:
-  #   name: (Ubuntu) Cargo Release
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: nightly
-  #     - name: build release
-  #       uses: actions-rs/cargo@v1
-  #       with:
-  #         command: run
-  #         args: Bakefile
+  ubuntu_cargo_integration:
+    name: (Ubuntu) Cargo Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+      - name: integration test
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
 
-  # macos_cargo_build:
-  #   name: (MacOS) Cargo Release
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: nightly
-  #     - name: build release
-  #       uses: actions-rs/cargo@v1
-  #       with:
-  #         command: run
-  #         args: Bakefile
+  macos_cargo_integration:
+    name: (MacOS) Cargo Release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+      - name: integration test
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
