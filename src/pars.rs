@@ -59,7 +59,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                 continue;
             },
             ' ' => {
-                if !inshell {
+                if !inshell && !incomment {
                     indent += 1;
                 } else {
                     shell_command.push(c)
@@ -90,7 +90,16 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                         inshell = true;
                         shell_command.push(c)
                     },
-                    _ => return Err(Error::RecipeParsingError(format!("unhandled symbol: {:?} at {}:{}:{}", c, lineno, lpos, pos)))
+                    _ => {
+                        if comment_start(c) {
+                            incomment = true;
+                        } else if comment_end(c) {
+                            incomment = false;
+                        } else {
+                            //return Err(Error::RecipeParsingError(format!("unhandled symbol: {:?} at {}:{}:{}", c, lineno, lpos, pos)))
+                            continue;
+                        }
+                    }
                 }
             }
         }
@@ -248,15 +257,31 @@ run:
    #[test]
     fn test_target_pesos()  -> Result<(), Error> {
         let input = "₢₱
-brush:
-    wash
+
+brush-teeth: ₱aste!
     rinse
 ";
         let recipe = parse_recipe(&input)?;
 
-        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("brush", &["wash", "rinse"], &[])));
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("brush-teeth", &[ "rinse"], &[])));
         Ok(())
     }
+
+//     #[test]
+//     fn test_spaces_and_comments()  -> Result<(), Error> {
+//         let input = "₢ ₱
+//
+// brush-teeth: disinfect
+//     ₱aste, remember the paste!
+//     brush
+//     rinse
+//     spit
+// ";
+//         let recipe = parse_recipe(&input)?;
+//
+//         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("brush-teeth", &[ "brush", "rinse", "spit"], &["disinfect"])));
+//         Ok(())
+//     }
 
 }
 
