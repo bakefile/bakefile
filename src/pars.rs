@@ -4,7 +4,7 @@ use crate::errors::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '₽' | '₪' | '₠' | '₤' | '₦' | '€' | '₢' => true,
+        '₽' | '₪' | '₠' | '₤' | '₦' | '€' | '₢' | '₧' => true,
         _ => false
     }
 }
@@ -242,6 +242,19 @@ run:
         let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("run", &["ignite"], &[])));
+        Ok(())
+    }
+
+   #[test]
+    fn test_target_pesos()  -> Result<(), Error> {
+        let input = "₢₱
+brush:
+    wash
+    rinse
+";
+        let recipe = parse_recipe(&input)?;
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("brush", &["wash", "rinse"], &[])));
         Ok(())
     }
 
