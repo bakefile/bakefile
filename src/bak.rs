@@ -3,33 +3,29 @@ pub use crate::execute::{Bash, Sh};
 pub use crate::execute::Shell;
 use sanitation::SString;
 pub use std::process::{Command, Output};
+use std::io::{self, Write};
 
-
-pub fn shell(cmd: &str) -> Output {
-    // let mut columellae = vec![format!("/bin/bash"), format!("-c"), format!("\"{}\"", cmd)];
-    let mut columellae = cmd.split(" ").map(|col| col.trim().to_string()).collect::<Vec<String>>();
-    let apex = columellae.remove(0);
-    let mut command = &mut Command::new(apex);
-    for spire in columellae {
-        command = command.arg(spire);
-    }
-    command.output().expect(&format!("failed to follow instruction: {:?}", cmd))
+pub struct Baker {
+    safe: bool,
 }
 
-pub struct Baker {}
-
 impl Baker {
-    pub fn new() -> Baker {
-        Baker{}
+    pub fn new(safe: bool) -> Baker {
+        Baker{safe:safe}
     }
-    pub fn perform(recipe: Recipe) {
+    pub fn perform(&self, recipe: Recipe) {
         let instruction = recipe.main_instruction().expect(&format!("Baker cannot perform recipe {}", recipe));
         for step in instruction.steps() {
             let output = Sh::new(None).execute(&step).expect(&format!("failed execute step: {:?}", step));
-            let stdout = SString::new(&output.stdout);
-            let stderr = SString::new(&output.stderr);
-            println!("{}", stdout.soft_word());
-            eprintln!("{}", stderr.soft_word());
+            if self.safe {
+                let stdout = SString::new(&output.stdout);
+                let stderr = SString::new(&output.stderr);
+                println!("{}", stdout.soft_word());
+                eprintln!("{}", stderr.soft_word());
+            } else {
+                io::stdout().write_all(&output.stdout).expect(&format!("failed to write to stdout the output of {:?}", &step));
+                io::stderr().write_all(&output.stderr).expect(&format!("failed to write to stdout the output of {:?}", &step));
+            }
             match output.status.code() {
                 Some(code) => {
                     if code != 0 {

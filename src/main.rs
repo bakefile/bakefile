@@ -9,5 +9,5 @@ fn main() {
             std::process::exit(1);
         }
     };
-    Baker::perform(recipe);
+    Baker::new(false).perform(recipe);
 }
