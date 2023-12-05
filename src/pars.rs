@@ -351,16 +351,14 @@ brush-teeth:
 
 #[cfg(test)]
 mod functional_tests {
-    use std::fs;
-    use crate::pars::parse_recipe;
+    use crate::pars::parse_recipe_from_path;
     use k9::assert_equal;
     use crate::ing::{Instruction, Recipe};
     use crate::errors::{Error};
 
     #[test]
     fn test_parse_repo_bakefile()  -> Result<(), Error> {
-        let unparsed_file = fs::read_to_string("Bakefile").unwrap();
-        let recipe = parse_recipe(&unparsed_file)?;
+        let recipe = parse_recipe_from_path("Bakefile")?;
 
         assert_equal!(recipe, Recipe::with_instructions(vec![
             Instruction::with_dependencies("all", &[
@@ -369,15 +367,50 @@ mod functional_tests {
         ]));
         Ok(())
     }
+    #[test]
+    fn test_parse_test_bakefile_0c1t2s()  -> Result<(), Error> {
+        let recipe = parse_recipe_from_path("tests/simple/Bakefile.0c1t2s")?;
+
+        assert_equal!(recipe, Recipe::with_instructions(vec![
+            Instruction::with_dependencies("all", &[
+                "echo \"hello world\"",
+                "echo \"hallö welt\" > /dev/random",
+            ], &[]),
+        ]));
+        Ok(())
+    }
     // #[test]
-    // fn test_parse_test_bakefile_0c1t2s()  -> Result<(), Error> {
-    //     let unparsed_file = fs::read_to_string("tests/simple/Bakefile.0c1t2s").unwrap();
-    //     let recipe = parse_recipe(&unparsed_file)?;
+    // fn test_parse_test_bakefile_0c3t3s()  -> Result<(), Error> {
+    //     let recipe = parse_recipe_from_path("tests/simple/Bakefile.0c3t3s")?;
+    //
+    //     assert_equal!(recipe, Recipe::with_instructions(vec![
+    //
+    //         Instruction::with_dependencies("hw", &[
+    //         ], &["en", "de"]),
+    //
+    //         Instruction::with_dependencies("en", &[
+    //             "echo \"hello world\"",
+    //         ], &[]),
+    //
+    //         Instruction::with_dependencies("de", &[
+    //             "echo \"hallö welt\" > /dev/random",
+    //         ], &[]),
+    //
+    //     ]));
+    //     Ok(())
+    // }
+    // #[test]
+    // fn test_parse_test_bakefile_3c3t3s()  -> Result<(), Error> {
+    //     let recipe = parse_recipe_from_path("tests/simple/Bakefile.3c3t3s")?;
 
     //     assert_equal!(recipe, Recipe::with_instructions(vec![
-    //         Instruction::with_dependencies("all", &[], &["test"]),
-    //         Instruction::with_dependencies("test", &[
-    //             "cargo test",
+    //         Instruction::with_dependencies("hw", &[
+    //         ], &["en", "de"]),
+    //         Instruction::with_dependencies("en", &[
+    //             "echo \"hello world\"",
+    //         ], &[]),
+    //         Instruction::with_dependencies("de", &[
+    //             "echo \"hallö welt\" > /dev/random",
     //         ], &[]),
     //     ]));
     //     Ok(())
