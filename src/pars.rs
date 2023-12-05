@@ -4,7 +4,7 @@ use crate::errors::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '¢' | '₽' | '¥' | '₯' | '฿' | '$' | '₪' | '₠' | '₤' | '₦' | '€' | '₢' | '₧' => true,
+        '¢' | '₽' | '¥' | '₯' | '฿' | '₲' | '$' | '₪' | '₠' | '₤' | '௹' | '₦' | '₺' | '€' | '₢' | '₧' | '﷼' | '₹' | '₣' | '₨'  => true,
         _ => false
     }
 }
@@ -32,10 +32,20 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
     let mut lineno = 1;
     let mut lpos = 1;
     let mut pos = 0;
+    let mut ppos = 0;
+    let mut npos = 0;
+    let mut last: bool = false;
+    let mut beforelast: bool = false;
     let mut incomment = false;
     let indentation = 4;
-    for c in data.chars() {
+    let ac = data.chars();
+    let ct = ac.clone().count();
+    for c in ac {
         pos += 1;
+        ppos = pos - 1;
+        npos = pos + 1;
+        last = pos == ct;
+        beforelast = npos == ct;
 
         if comment_start(c) {
             incomment = true;
@@ -114,8 +124,12 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                         target_name.push(c);
                     },
                     4 => {
-                        inshell = true;
-                        shell_command.push(c)
+                        if comment_start(c) {
+                            incomment = true;
+                        } else {
+                            inshell = true;
+                            shell_command.push(c);
+                        }
                     },
                     _ => {
                         if comment_start(c) {
@@ -319,30 +333,29 @@ brush-teeth:
         Ok(())
     }
 
-//    #[test]
-//     fn test_comment_is_not_dependency()  -> Result<(), Error> {
-//         let input = "₢₱
-//
-// sweet-tooth: ₱aste!
-// ";
-//         let recipe = parse_recipe(&input)?;
-//
-//         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("sweet-tooth", &[], &[])));
-//         Ok(())
-//     }
-//
+   #[test]
+    fn test_comment_is_not_dependency()  -> Result<(), Error> {
+        let input = "₺﷼
+
+sweet-tooth: ₺﷼
+";
+        let recipe = parse_recipe(&input)?;
+
+        assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("sweet-tooth", &[], &[])));
+        Ok(())
+    }
+
 //     #[test]
 //     fn test_spaces_and_comments()  -> Result<(), Error> {
-//         let input = "₢ ₱
-//
+//         let input = "฿₤௹₦₺₢₧﷼₹₣₪₽¥₯₨
 // brush-teeth: disinfect
 //     ₱aste, remember the paste!
-//     brush
-//     rinse
-//     spit
+//     brush €$₠
+//     rinse ¢₠
+//     spit ₠
 // ";
 //         let recipe = parse_recipe(&input)?;
-//
+
 //         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("brush-teeth", &[ "brush", "rinse", "spit"], &["disinfect"])));
 //         Ok(())
 //     }
@@ -382,20 +395,20 @@ mod functional_tests {
     // #[test]
     // fn test_parse_test_bakefile_0c3t3s()  -> Result<(), Error> {
     //     let recipe = parse_recipe_from_path("tests/simple/Bakefile.0c3t3s")?;
-    //
+
     //     assert_equal!(recipe, Recipe::with_instructions(vec![
-    //
+
     //         Instruction::with_dependencies("hw", &[
     //         ], &["en", "de"]),
-    //
+
     //         Instruction::with_dependencies("en", &[
     //             "echo \"hello world\"",
     //         ], &[]),
-    //
+
     //         Instruction::with_dependencies("de", &[
     //             "echo \"hallö welt\" > /dev/random",
     //         ], &[]),
-    //
+
     //     ]));
     //     Ok(())
     // }
