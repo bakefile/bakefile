@@ -32,21 +32,20 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
     let mut lineno = 1;
     let mut lpos = 1;
     let mut pos = 0;
-    let mut ppos = 0;
-    let mut npos = 0;
-    let mut last: bool = false;
-    let mut beforelast: bool = false;
+    // let mut npos = 0;
+    // let mut ppos = 0;
+    // let mut last: bool = false;
+    // let mut beforelast: bool = false;
     let mut incomment = false;
     let indentation = 4;
     let ac = data.chars();
-    let ct = ac.clone().count();
+    // let ct = ac.clone().count();
     for c in ac {
         pos += 1;
-        ppos = pos - 1;
-        npos = pos + 1;
-        last = pos == ct;
-        beforelast = npos == ct;
-
+        // npos = pos + 1;
+        // ppos = pos - 1;
+        // last = pos == ct;
+        // beforelast = npos == ct;
         if comment_start(c) {
             incomment = true;
             continue;
@@ -58,7 +57,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                 }
             } else if inshell {
                 if !shell_command.is_empty() {
-                    instruction.add_action(&shell_command);
+                    instruction.add_action(&shell_command.trim());
                     shell_command.clear();
                 }
             }
@@ -68,7 +67,6 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
             incomment = false;
             inshell = false;
             dependency = false;
-
             continue;
         }
         if incomment {
@@ -79,7 +77,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
         match c {
             '\t' => {
                 continue
-            }
+            },
             ':' => {
                 match indent {
                     0 => {
@@ -103,8 +101,8 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                 }
                 if !inshell && !incomment {
                     indent += 1;
-                } else {
-                    shell_command.push(c)
+                } else if !incomment {
+                    shell_command.push(c);
                 }
                 continue;
             },
@@ -138,7 +136,6 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                             incomment = false;
                         } else {
                             return Err(Error::RecipeParsingError(format!("unhandled symbol: {:?} at {}:{}:{}", c, lineno, lpos, pos)))
-                            // continue;
                         }
                     }
                 }
@@ -153,7 +150,7 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
         }
     } else if inshell {
         if !shell_command.is_empty() {
-            instruction.add_action(&shell_command);
+            instruction.add_action(&shell_command.trim());
             shell_command.clear();
         }
     }
