@@ -271,14 +271,14 @@ foo:
 
 
     #[test]
-    fn test_target_and_comment_more_symbols()  -> Result<(), Error> {
-        let input = "¢₳₦₳₳₦
+    fn test_confirmation_bias()  -> Result<(), Error> {
+        let input = "45₳₦₳₦1₳$
 foo:
     bar
 
     baz
 
-₦ééééééééééé
+₦ééééééééééé~?~
 ";
         let recipe = parse_recipe(&input)?;
 
