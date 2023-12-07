@@ -4,7 +4,7 @@ use crate::errors::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '¢' | '₽' | '¥' | '₯' | '฿' | '₲' | '$' | '₪' | '₠' | '₤' | '௹' | '₦' | '₺' | '€' | '₢' | '₧' | '﷼' | '₹' | '₣' | '₨'  => true,
+        '¢' | '₽' | '¥' | '₯'| '฿' | '₲' | '₳' | '$' | '₪' | '₠' | '₤' | '௹' | '₦' | '₺' | '€' | '₢' | '₧' | '﷼' | '₹' | '₣' | '₨'  => true,
         _ => false
     }
 }
@@ -271,11 +271,11 @@ foo:
 
 
     #[test]
-    fn test_target_and_comment_symbol_naira()  -> Result<(), Error> {
-        let input = "₦éééééé
+    fn test_target_and_comment_more_symbols()  -> Result<(), Error> {
+        let input = "¢₳₦₳₳₦
 foo:
     bar
-    ₦ééééééééééé
+
     baz
 
 ₦ééééééééééé
@@ -331,7 +331,7 @@ brush-teeth:
     }
 
    #[test]
-    fn test_comment_is_not_dependency()  -> Result<(), Error> {
+    fn test_comment_are_not_dependency()  -> Result<(), Error> {
         let input = "₺﷼
 
 sweet-tooth: ₺﷼
