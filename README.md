@@ -7,12 +7,6 @@
 ---
 
 # ⚠️
-<!-- # ⚠️ ACHTUNG! ⚠️ -->
-<!-- # ⚠️ ATENCIÓN! ⚠️ -->
-<!-- # ⚠️ ATENÇÃO! ⚠️ -->
-<!-- # ⚠️ ATTENTION! ⚠️ -->
-<!-- # ⚠️ ATTENZIONE! ⚠️ -->
-<!-- # ⚠️ WARNING! ⚠️ -->
 
 # 🚧👷 STILL WORK-IN-PROGRESS 👷🚧
 
@@ -23,17 +17,15 @@ cargo install bakefile
 ```
 
 `bake` is kind of like `make` in that it runs subprocesses but its
-domain makes references to baking and its comments takes currency
-symbols.
+domain makes references to baking.
 
 ## Features:
 
 - Each `Bakefile` is a "recipe"
 - Each "recipe" declares "instructions"
 - Each "instruction" can contain either "steps" or "dependencies" or both
-- Uses 4 spaces for steps
+- Uses 6 spaces for steps
 - Tabs are not supported
-- Uncommonly allows currency symbols as comments
 
 ## USAGE
 

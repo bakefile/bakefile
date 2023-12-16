@@ -1,7 +1,7 @@
 hw: en de
 
 en:
-    echo "hello world"
+      echo "hello world"
 
 de:
-    echo "hallö welt"
+      echo "hallö welt" > /dev/random

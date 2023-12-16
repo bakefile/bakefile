@@ -1,5 +1,6 @@
-€ comment
-₽ comment
+# comment
 
 all:
-    cargo test
+      cargo test
+
+# comment

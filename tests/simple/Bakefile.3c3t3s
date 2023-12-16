@@ -1,10 +1,10 @@
-₺ Simple Example
-₺ 3 targets & 3 shell-commands
+# Simple Example
+# 3 targets & 3 shell-commands
 
 hw: en de
 
 en:
-    echo "hello world"
+      echo "hello world"
 
 de:
-    echo "hallö welt"
+      echo "hallö welt"

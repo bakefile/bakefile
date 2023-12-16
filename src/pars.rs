@@ -4,7 +4,7 @@ use crate::errors::Error;
 
 fn comment_start(c: char) -> bool {
     match c  {
-        '₽' | '€' => true,
+        '#' => true,
         _ => false
     }
 }
@@ -31,20 +31,11 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
     let mut lineno = 1;
     let mut lpos = 1;
     let mut pos = 0;
-    // let mut npos = 0;
-    // let mut ppos = 0;
-    // let mut last: bool = false;
-    // let mut beforelast: bool = false;
     let mut incomment = false;
-    let indentation = 4;
+    let indentation = 6;
     let ac = data.chars();
-    // let ct = ac.clone().count();
     for c in ac {
         pos += 1;
-        // npos = pos + 1;
-        // ppos = pos - 1;
-        // last = pos == ct;
-        // beforelast = npos == ct;
         if comment_start(c) {
             incomment = true;
             continue;
@@ -86,6 +77,8 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                     },
                     i => if i == indentation {
                         shell_command.push(c)
+                    } else {
+                        return Err(Error::RecipeParsingError(format!("invalid character {:?} at {}:{}:{}", c, lineno, lpos, pos)))
                     },
                 }
                 continue;
@@ -120,21 +113,20 @@ pub fn parse_recipe(data: &str) -> Result<Recipe, Error> {
                     0 => {
                         target_name.push(c);
                     },
-                    4 => {
-                        if comment_start(c) {
-                            incomment = true;
-                        } else {
-                            inshell = true;
-                            shell_command.push(c);
-                        }
-                    },
-                    _ => {
+                    f => {
                         if comment_start(c) {
                             incomment = true;
                         } else if new_line(c) {
                             incomment = false;
+                        } else if f == indentation {
+                            inshell = true;
+                            shell_command.push(c);
                         } else {
-                            return Err(Error::RecipeParsingError(format!("unhandled symbol: {:?} at {}:{}:{}", c, lineno, lpos, pos)))
+                            if indent != indentation {
+                                return Err(Error::RecipeParsingError(format!("got {} spaces instead of 6 at {}:{}:{}", indent, lineno, lpos, pos)))
+                            } else {
+                                return Err(Error::RecipeParsingError(format!("unhandled symbol: {:?} at line {}:{}:{}", c, lineno, lpos, pos)))
+                            }
                         }
                     }
                 }
@@ -180,7 +172,7 @@ mod unit_tests {
     #[test]
     fn test_target_and_command() -> Result<(), Error>  {
         let input = "foo:
-    bar";
+      bar";
         let recipe = parse_recipe(&input)?;
 
         assert_equal!(recipe, Recipe::with_instruction(Instruction::with_dependencies("foo", &["bar"], &[])));
@@ -190,8 +182,8 @@ mod unit_tests {
     #[test]
     fn test_target_and_2_commands()  -> Result<(), Error> {
         let input = "foo:
-    bar
-    baz
+      bar
+      baz
 ";
         let recipe = parse_recipe(&input)?;
 
@@ -218,11 +210,11 @@ mod comment_tests {
     use crate::errors::{Error};
 
     #[test]
-    fn test_comment_seems_to_use_currency_symbols_for_some_apparent_reason() -> Result<(), Error>  {
-        let input = "€p
+    fn test_comment_seems_to_use_hash_symbol_for_some_apparent_reason() -> Result<(), Error>  {
+        let input = "# comment
 foo:
-    bar
-    ₽e
+      bar
+      # comment
 ";
         let recipe = parse_recipe(&input)?;
 
